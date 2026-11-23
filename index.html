@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ExpenseFlow | Expense Manager</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #6757f5;
+            --primary-dark: #5142dc;
+            --background: #f6f7fc;
+            --surface: #ffffff;
+            --text: #20223a;
+            --muted: #82869b;
+            --border: #eaebf3;
+            --green: #16a579;
+            --red: #e05260;
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", Arial, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .brand span {
+            color: var(--primary);
+        }
+
+        .auth-wrapper {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 20px;
+            background:
+                radial-gradient(circle at top left, #e5e1ff, transparent 40%),
+                radial-gradient(circle at bottom right, #d8f8ee, transparent 35%),
+                var(--background);
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 32px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px #24225012;
+        }
+
+        .auth-card .brand {
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            font-size: 27px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin: 8px 0 25px;
+            font-size: 13px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 7px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: white;
+            color: var(--text);
+            outline: none;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px #6757f515;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            transition: 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-light {
+            background: #eeebff;
+            color: var(--primary);
+        }
+
+        .btn-danger {
+            background: #fff0f1;
+            color: var(--red);
+        }
+
+        .full-width {
+            width: 100%;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .auth-switch {
+            text-align: center;
+            font-size: 13px;
+            margin-top: 20px;
+            color: var(--muted);
+        }
+
+        .text-button {
+            border: none;
+            background: transparent;
+            color: var(--primary);
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .message {
+            font-size: 12px;
+            margin-top: 10px;
+            overflow-wrap: anywhere;
+        }
+
+        .message.error {
+            color: var(--red);
+        }
+
+        .message.success {
+            color: var(--green);
+        }
+
+        .app-header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-inner {
+            max-width: 1250px;
+            margin: auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: var(--muted);
+            overflow-wrap: anywhere;
+        }
+
+        .connection-status {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        .container {
+            max-width: 1250px;
+            margin: auto;
+            padding: 28px 24px;
+        }
+
+        .page-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .page-heading p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 22px;
+        }
+
+        .summary-card,
+        .panel {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 22px;
+            box-shadow: 0 8px 30px #24225008;
+            min-width: 0;
+        }
+
+        .summary-label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: clamp(22px, 3vw, 30px);
+            font-weight: 800;
+            margin-top: 12px;
+            overflow-wrap: anywhere;
+        }
+
+        .summary-note {
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 7px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .panel-header h2,
+        .transactions-title {
+            font-size: 17px;
+        }
+
+        .panel-header p {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 14px;
+        }
+
+        .full-span {
+            grid-column: 1 / -1;
+        }
+
+        .budget-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .budget-input-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .budget-progress {
+            height: 10px;
+            background: #eff0f7;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 20px 0 12px;
+        }
+
+        .budget-progress-fill {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, #6757f5, #9b8fff);
+            transition: width 0.3s;
+        }
+
+        .budget-progress-fill.over-budget {
+            background: var(--red);
+        }
+
+        .budget-details {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        .savings-box {
+            background: #e9faf3;
+            padding: 17px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .savings-box .summary-value {
+            color: var(--green);
+        }
+
+        .chart-container {
+            height: 280px;
+            position: relative;
+        }
+
+        .transactions-panel {
+            margin-top: 22px;
+        }
+
+        .transaction-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            max-width: 300px;
+        }
+
+        .transaction-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .transaction-details {
+            min-width: 0;
+        }
+
+        .transaction-details strong {
+            display: block;
+            font-size: 13px;
+            overflow-wrap: anywhere;
+        }
+
+        .transaction-details span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            margin-top: 5px;
+        }
+
+        .transaction-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .transaction-amount {
+            font-weight: 800;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        .transaction-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .transaction-actions .btn {
+            padding: 7px 10px;
+            font-size: 11px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: var(--muted);
+            font-size: 11px;
+        }
+
+        @media (max-width: 800px) {
+            .summary-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 550px) {
+            .header-inner {
+                padding: 12px;
+            }
+
+            .header-right {
+                gap: 8px;
+            }
+
+            .user-email {
+                max-width: 130px;
+            }
+
+            .container {
+                padding: 18px 12px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .panel,
+            .summary-card {
+                padding: 17px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-span {
+                grid-column: auto;
+            }
+
+            .budget-input-row {
+                flex-direction: column;
+            }
+
+            .transaction-item {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .transaction-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .search-input {
+                max-width: none;
+            }
+
+            .chart-container {
+                height: 240px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- LOGIN / REGISTER -->
+
+    <section id="authSection" class="auth-wrapper">
+        <div class="auth-card">
+
+            <div class="brand">
+                Expense<span>Flow</span>
+            </div>
+
+            <h1 id="authHeading">Welcome back!</h1>
+
+            <p class="subtitle">
+                Manage your money with clarity and confidence.
+            </p>
+
+            <form id="authForm">
+
+                <div class="form-group">
+                    <label for="authEmail">Email address</label>
+
+                    <input
+                        id="authEmail"
+                        type="email"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="authPassword">Password</label>
+
+                    <input
+                        id="authPassword"
+                        type="password"
+                        autocomplete="current-password"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <button
+                    id="authSubmit"
+                    class="btn btn-primary full-width"
+                    type="submit"
+                >
+                    Login
+                </button>
+
+                <p
+                    id="authMessage"
+                    class="message"
+                    role="status"
+                ></p>
+
+            </form>
+
+            <div class="auth-switch">
+                <span id="authSwitchText">
+                    Don't have an account?
+                </span>
+
+                <button
+                    id="authSwitchButton"
+                    class="text-button"
+                    type="button"
+                >
+                    Create account
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- DASHBOARD -->
+
+    <section id="appSection" hidden>
+
+        <header class="app-header">
+
+            <div class="header-inner">
+
+                <div class="brand">
+                    Expense<span>Flow</span>
+                </div>
+
+                <div class="header-right">
+
+                    <div>
+                        <div
+                            id="userEmail"
+                            class="user-email"
+                        ></div>
+
+                        <div
+                            id="connectionStatus"
+                            class="connection-status"
+                        >
+                            Connecting...
+                        </div>
+                    </div>
+
+                    <button
+                        id="logoutButton"
+                        class="btn btn-light"
+                        type="button"
+                    >
+                        Logout
+                    </button>
+
+                </div>
+
+            </div>
+
+        </header>
+
+        <main class="container">
+
+            <div class="page-heading">
+
+                <div>
+                    <h1>Expense Dashboard</h1>
+
+                    <p>
+                        Your monthly financial overview.
+                    </p>
+                </div>
+
+                <button
+                    id="pdfButton"
+                    class="btn btn-primary"
+                    type="button"
+                >
+                    Download PDF
+                </button>
+
+            </div>
+
+            <!-- SUMMARY -->
+
+            <section class="summary-grid">
+
+                <article class="summary-card">
+                    <div class="summary-label">
+                        This Month's Expenses
+                    </div>
+
+                    <div
+                        id="totalExpenses"
+                        class="summary-value"
+                    >
+                        ₹0.00
+                    </div>
+
+                    <div class="summary-note">
+                        Spending this month
+                    </div>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-label">
+                        Monthly Budget
+                    </div>
+
+                    <div
+                        id="monthlyBudgetDisplay"
+                        class="summary-value"
+                    >
+                        ₹0.00
+                    </div>
+
+                    <div class="summary-note">
+                        Your spending limit
+                    </div>
+                </article>
+
+                <article class="summary-card">
+                    <div class="summary-label">
+                        Budget Remaining
+                    </div>
+
+                    <div
+                        id="remainingBudget"
+                        class="summary-value"
+                    >
+                        ₹0.00
+                    </div>
+
+                    <div
+                        id="savingsNote"
+                        class="summary-note"
+                    >
+                        Budget remaining after expenses
+                    </div>
+                </article>
+
+            </section>
+
+            <section class="content-grid">
+
+                <!-- ADD EXPENSE -->
+
+                <article class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2 id="expenseFormTitle">
+                                Add an Expense
+                            </h2>
+
+                            <p>
+                                Record your spending.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="expenseForm">
+
+                        <div class="form-grid">
+
+                            <div class="form-group">
+                                <label for="date">
+                                    Expense Date
+                                </label>
+
+                                <input
+                                    id="date"
+                                    type="date"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category">
+                                    Category
+                                </label>
+
+                                <select id="category" required>
+                                    <option value="">
+                                        Choose category
+                                    </option>
+
+                                    <option value="Food">
+                                        Food
+                                    </option>
+
+                                    <option value="Travel">
+                                        Travel
+                                    </option>
+
+                                    <option value="Shopping">
+                                        Shopping
+                                    </option>
+
+                                    <option value="Bills">
+                                        Bills
+                                    </option>
+
+                                    <option value="Rent">
+                                        Rent
+                                    </option>
+
+                                    <option value="Health">
+                                        Health
+                                    </option>
+
+                                    <option value="Education">
+                                        Education
+                                    </option>
+
+                                    <option value="Entertainment">
+                                        Entertainment
+                                    </option>
+
+                                    <option value="Other">
+                                        Other
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="form-group full-span">
+                                <label for="description">
+                                    Description
+                                </label>
+
+                                <input
+                                    id="description"
+                                    type="text"
+                                    maxlength="150"
+                                    placeholder="e.g. Grocery shopping"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group full-span">
+                                <label for="amount">
+                                    Amount (₹)
+                                </label>
+
+                                <input
+                                    id="amount"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="Enter amount"
+                                    required
+                                >
+                            </div>
+
+                        </div>
+
+                        <button
+                            id="submitButton"
+                            class="btn btn-primary full-width"
+                            type="submit"
+                        >
+                            + Add Expense
+                        </button>
+
+                        <button
+                            id="cancelEditButton"
+                            class="btn btn-light full-width"
+                            type="button"
+                            hidden
+                            style="margin-top:8px"
+                        >
+                            Cancel Edit
+                        </button>
+
+                        <p
+                            id="formMessage"
+                            class="message"
+                            role="status"
+                        ></p>
+
+                    </form>
+
+                </article>
+
+                <!-- MONTHLY BUDGET -->
+
+                <article class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2>Monthly Budget</h2>
+
+                            <p>
+                                Plan your spending.
+                            </p>
+                        </div>
+                    </div>
+
+                    <form id="budgetForm">
+
+                        <div class="form-group">
+                            <label for="budgetInput">
+                                Monthly Budget (₹)
+                            </label>
+
+                            <div class="budget-input-row">
+
+                                <input
+                                    id="budgetInput"
+                                    type="number"
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="e.g. 15000"
+                                    required
+                                >
+
+                                <button
+                                    id="saveBudgetButton"
+                                    class="btn btn-primary"
+                                    type="submit"
+                                >
+                                    Save Budget
+                                </button>
+
+                            </div>
+                        </div>
+
+                        <p
+                            id="budgetMessage"
+                            class="message"
+                            role="status"
+                        ></p>
+
+                    </form>
+
+                    <div class="budget-progress">
+                        <div
+                            id="budgetProgressFill"
+                            class="budget-progress-fill"
+                        ></div>
+                    </div>
+
+                    <div class="budget-details">
+                        <span id="budgetUsedText">
+                            Used: ₹0.00
+                        </span>
+
+                        <span id="budgetPercentText">
+                            Set a budget
+                        </span>
+                    </div>
+
+                    <div class="savings-box">
+                        <div class="summary-label">
+                            Estimated Budget Savings
+                        </div>
+
+                        <div
+                            id="savingsAmount"
+                            class="summary-value"
+                        >
+                            ₹0.00
+                        </div>
+
+                        <div class="summary-note">
+                            Budget minus this month's expenses.
+                            This is not income-based savings.
+                        </div>
+                    </div>
+
+                </article>
+
+                <!-- CHART -->
+
+                <article class="panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h2>Spending Breakdown</h2>
+
+                            <p>
+                                Category-wise spending this month.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+
+                    <p
+                        id="chartMessage"
+                        class="message"
+                    ></p>
+
+                </article>
+
+            </section>
+
+            <!-- TRANSACTIONS -->
+
+            <section class="panel transactions-panel">
+
+                <div class="transaction-toolbar">
+
+                    <div>
+                        <h2 class="transactions-title">
+                            Recent Expenses
+                        </h2>
+
+                        <p class="summary-note">
+                            Search, edit or delete expenses.
+                        </p>
+                    </div>
+
+                    <input
+                        id="searchInput"
+                        class="search-input"
+                        type="search"
+                        placeholder="Search expenses..."
+                    >
+
+                </div>
+
+                <div
+                    id="transactionList"
+                    class="transaction-list"
+                >
+                    <div class="empty-state">
+                        Your expenses will appear here.
+                    </div>
+                </div>
+
+            </section>
+
+        </main>
+
+        <footer class="footer">
+            ExpenseFlow — Smarter money management.
+        </footer>
+
+    </section>
+
+    <script type="module" src="./script.js"></script>
+
+</body>
+</html>
